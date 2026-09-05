@@ -53,6 +53,10 @@
     let running=false;
     let stopped=false;
     let previewTimer=null;
+    let pendingRequestId='';
+    let pendingPayload=null;
+    let ackTimer=null;
+    let resultTimer=null;
 
     const TEMPLATE=[
       {x:38.2946,y:51.6963},{x:73.5318,y:51.5014},{x:56.0252,y:71.7366},{x:41.5493,y:92.3655},{x:70.7299,y:92.2041}
@@ -210,13 +214,69 @@
       return v.map(x=>x/n);
     }
 
-    button.addEventListener('click',captureBatch);
+    button.addEventListener('click',()=>{
+      if(pendingPayload){
+        sendPayloadToMain(pendingPayload);
+        return;
+      }
+      captureBatch();
+    });
+
     cancelButton.addEventListener('click',()=>{stopAll();window.close()});
+
+    window.addEventListener('message',event=>{
+      if(!window.opener||event.source!==window.opener)return;
+      const data=event.data;
+      if(!data||data.source!=='face-main-app')return;
+      if(String(data.requestId||'')!==String(pendingRequestId||''))return;
+
+      if(data.action==='FACE_REQUEST_RECEIVED'){
+        if(ackTimer){clearTimeout(ackTimer);ackTimer=null;}
+        setStatus(mode==='register'
+          ? '✓ La aplicación recibió las muestras. Guardando perfil en Apps Script...'
+          : '✓ La aplicación recibió las muestras. Comparando identidad...');
+        return;
+      }
+
+      if(data.action==='FACE_ENROLLMENT_RESULT'&&mode==='register'){
+        clearResponseTimers();
+        if(data.ok){
+          pendingPayload=null;
+          setStatus('✓ Perfil facial guardado correctamente.');
+          button.disabled=true;
+          setTimeout(()=>window.close(),1500);
+        }else{
+          setStatus('No se guardó el perfil: '+(data.message||'Error desconocido.'),true);
+          button.textContent='Reintentar envío';
+          button.disabled=false;
+        }
+        return;
+      }
+
+      if(data.action==='FACE_RECOGNITION_RESULT'&&mode==='recognize'){
+        clearResponseTimers();
+        if(data.ok){
+          pendingPayload=null;
+          setStatus('✓ Reconocimiento procesado. Puedes volver a la aplicación principal.');
+          button.disabled=true;
+          setTimeout(()=>window.close(),1200);
+        }else{
+          setStatus('No se pudo procesar el reconocimiento: '+(data.message||'Error desconocido.'),true);
+          button.textContent='Reintentar envío';
+          button.disabled=false;
+        }
+      }
+    });
 
     async function captureBatch(){
       if(running)return;
-      running=true;button.disabled=true;if(previewTimer)clearTimeout(previewTimer);
-      const embeddings=[],qualities=[];
+      running=true;
+      button.disabled=true;
+      if(previewTimer)clearTimeout(previewTimer);
+
+      const embeddings=[];
+      const qualities=[];
+
       try{
         for(let i=0;i<samplesRequired;i++){
           setStatus((mode==='register'?'Creando perfil':'Verificando identidad')+' · muestra '+(i+1)+' de '+samplesRequired+'...');
@@ -226,10 +286,77 @@
           updateProgress(i+1);
           if(i<samplesRequired-1)await sleep(350);
         }
+
         if(!window.opener)throw new Error('No fue posible comunicarse con la aplicación principal.');
-        window.opener.postMessage({source:'face-camera-app',action:mode==='register'?'FACE_ENROLLMENT_ARCFACE':'FACE_RECOGNITION_ARCFACE',token,embeddings,qualities,model:ENGINE_ID,version:ENGINE_VERSION,device:deviceLabel()},'*');
-        setStatus('✓ Proceso completado.');stopAll();setTimeout(()=>window.close(),800);
-      }catch(e){console.error(e);running=false;button.disabled=false;setStatus(e.message||'No fue posible procesar el rostro.',true);startPreview()}
+
+        pendingRequestId=createRequestId();
+        pendingPayload={
+          source:'face-camera-app',
+          action:mode==='register'?'FACE_ENROLLMENT_ARCFACE':'FACE_RECOGNITION_ARCFACE',
+          requestId:pendingRequestId,
+          token,
+          embeddings,
+          qualities,
+          model:ENGINE_ID,
+          version:ENGINE_VERSION,
+          device:deviceLabel()
+        };
+
+        /*
+         * Ya no cerramos la ventana inmediatamente.
+         * La cámara se apaga para liberar el dispositivo, pero esta
+         * ventana permanece abierta hasta que Apps Script confirme
+         * que realmente guardó/procesó el perfil.
+         */
+        stopAll();
+        running=false;
+        sendPayloadToMain(pendingPayload);
+
+      }catch(e){
+        console.error(e);
+        running=false;
+        button.disabled=false;
+        setStatus(e.message||'No fue posible procesar el rostro.',true);
+        if(!stopped)startPreview();
+      }
+    }
+
+    function sendPayloadToMain(payload){
+      if(!window.opener){
+        setStatus('La aplicación principal ya no está disponible. Vuelve a abrir Registrar rostro.',true);
+        button.disabled=true;
+        return;
+      }
+
+      clearResponseTimers();
+      button.disabled=true;
+      setStatus('Enviando '+samplesRequired+' muestras a la aplicación principal...');
+      window.opener.postMessage(payload,'*');
+
+      ackTimer=setTimeout(()=>{
+        setStatus(
+          'La aplicación principal no confirmó la recepción. Esto suele indicar que la Web App de Apps Script no está en la misma versión. Actualiza la implementación y pulsa Reintentar envío.',
+          true
+        );
+        button.textContent='Reintentar envío';
+        button.disabled=false;
+      },5000);
+
+      resultTimer=setTimeout(()=>{
+        setStatus('Apps Script recibió el proceso pero está tardando demasiado en responder. Revisa Ejecuciones de Apps Script.',true);
+        button.textContent='Reintentar envío';
+        button.disabled=false;
+      },30000);
+    }
+
+    function clearResponseTimers(){
+      if(ackTimer){clearTimeout(ackTimer);ackTimer=null;}
+      if(resultTimer){clearTimeout(resultTimer);resultTimer=null;}
+    }
+
+    function createRequestId(){
+      if(window.crypto&&typeof window.crypto.randomUUID==='function')return window.crypto.randomUUID();
+      return 'REQ-'+Date.now()+'-'+Math.random().toString(16).slice(2);
     }
 
     async function waitForValidFace(maxAttempts){
@@ -245,7 +372,7 @@
     function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
     function deviceLabel(){if(navigator.userAgentData?.mobile)return'movil';return /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)?'movil':'desktop'}
     function stopAll(){stopped=true;if(previewTimer)clearTimeout(previewTimer);if(stream)stream.getTracks().forEach(t=>t.stop());video.srcObject=null}
-    window.addEventListener('beforeunload',stopAll);
+    window.addEventListener('beforeunload',()=>{clearResponseTimers();stopAll()});
   </script>
 </body>
 </html>
