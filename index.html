@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Registro facial</title>
+
+  <!-- Librería de reconocimiento facial -->
+  <script
+    src="https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/dist/human.js"
+  ></script>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+
+      background: #f5f7fa;
+      color: #172033;
+
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      display: grid;
+      place-items: center;
+
+      padding: 20px;
+    }
+
+    .card {
+      width: min(480px, 100%);
+
+      background: white;
+
+      border: 1px solid #e5e9ef;
+
+      border-radius: 20px;
+
+      padding: 22px;
+
+      box-shadow:
+        0 12px 40px rgba(17, 24, 39, 0.08);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 21px;
+    }
+
+    .description {
+      margin: 7px 0 20px;
+
+      color: #687386;
+
+      font-size: 13px;
+
+      line-height: 1.5;
+    }
+
+    .camera {
+      position: relative;
+
+      width: 100%;
+
+      aspect-ratio: 3 / 4;
+
+      overflow: hidden;
+
+      background: #111827;
+
+      border-radius: 16px;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+
+      object-fit: cover;
+
+      transform: scaleX(-1);
+    }
+
+    .guide {
+      position: absolute;
+
+      left: 50%;
+      top: 50%;
+
+      width: 65%;
+      height: 58%;
+
+      transform: translate(-50%, -50%);
+
+      border:
+        3px solid rgba(255, 255, 255, 0.65);
+
+      border-radius: 48%;
+
+      pointer-events: none;
+    }
+
+    .camera.ready .guide {
+      border-color: #4ade80;
+    }
+
+    .status {
+      min-height: 50px;
+
+      margin-top: 16px;
+
+      padding: 12px;
+
+      background: #f5f7fa;
+
+      border-radius: 10px;
+
+      font-size: 13px;
+
+      text-align: center;
+
+      line-height: 1.5;
+    }
+
+    .actions {
+      display: grid;
+
+      gap: 10px;
+
+      margin-top: 14px;
+    }
+
+    button {
+      min-height: 44px;
+
+      border: 0;
+      border-radius: 10px;
+
+      cursor: pointer;
+
+      font: inherit;
+      font-weight: 600;
+    }
+
+    #captureButton {
+      background: #172033;
+      color: white;
+    }
+
+    #captureButton:disabled {
+      cursor: default;
+      opacity: 0.45;
+    }
+
+    .secondary {
+      background: #eef1f5;
+      color: #172033;
+    }
+
+    .error {
+      color: #a93636;
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+  <main class="card">
+
+    <h1>
+      Registrar rostro
+    </h1>
+
+    <p class="description">
+      Mira directamente a la cámara y procura tener buena iluminación.
+    </p>
+
+    <div
+      id="cameraContainer"
+      class="camera"
+    >
+
+      <video
+        id="video"
+        autoplay
+        muted
+        playsinline
+      ></video>
+
+      <div class="guide"></div>
+
+    </div>
+
+    <div
+      id="status"
+      class="status"
+    >
+      Inicializando sistema...
+    </div>
+
+    <div class="actions">
+
+      <button
+        id="captureButton"
+        type="button"
+        disabled
+      >
+        Registrar rostro
+      </button>
+
+      <button
+        id="cancelButton"
+        type="button"
+        class="secondary"
+      >
+        Cancelar
+      </button>
+
+    </div>
+
+  </main>
+
+
+  <script>
+
+    /*
+     * ========================================================
+     * PARÁMETROS
+     * ========================================================
+     */
+
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+    const token =
+      params.get('token') || '';
+
+
+    /*
+     * ========================================================
+     * ELEMENTOS
+     * ========================================================
+     */
+
+    const video =
+      document.getElementById(
+        'video'
+      );
+
+    const statusElement =
+      document.getElementById(
+        'status'
+      );
+
+    const captureButton =
+      document.getElementById(
+        'captureButton'
+      );
+
+    const cancelButton =
+      document.getElementById(
+        'cancelButton'
+      );
+
+    const cameraContainer =
+      document.getElementById(
+        'cameraContainer'
+      );
+
+
+    /*
+     * ========================================================
+     * ESTADO
+     * ========================================================
+     */
+
+    let stream = null;
+
+    let currentFace = null;
+
+    let detectionRunning = false;
+
+    let stopped = false;
+
+
+    /*
+     * ========================================================
+     * CONFIGURACIÓN HUMAN
+     * ========================================================
+     */
+
+    const humanConfig = {
+
+      backend: 'webgl',
+
+      modelBasePath:
+        'https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/models/',
+
+      cacheSensitivity: 0.01,
+
+      filter: {
+        enabled: true,
+        equalization: true
+      },
+
+      face: {
+
+        enabled: true,
+
+        detector: {
+          rotation: true,
+          maxDetected: 2,
+          minConfidence: 0.70
+        },
+
+        mesh: {
+          enabled: true
+        },
+
+        description: {
+          enabled: true
+        },
+
+        iris: {
+          enabled: false
+        },
+
+        emotion: {
+          enabled: false
+        },
+
+        antispoof: {
+          enabled: false
+        },
+
+        liveness: {
+          enabled: false
+        }
+
+      },
+
+      body: {
+        enabled: false
+      },
+
+      hand: {
+        enabled: false
+      },
+
+      object: {
+        enabled: false
+      },
+
+      gesture: {
+        enabled: false
+      }
+
+    };
+
+
+    const human =
+      new Human.Human(
+        humanConfig
+      );
+
+
+    /*
+     * ========================================================
+     * INICIALIZACIÓN
+     * ========================================================
+     */
+
+    async function initialize() {
+
+      try {
+
+        if (!token) {
+
+          throw new Error(
+            'La sesión de registro facial no es válida.'
+          );
+
+        }
+
+        setStatus(
+          'Solicitando permiso para utilizar la cámara...'
+        );
+
+        await startCamera();
+
+        setStatus(
+          'Cargando modelo de reconocimiento facial...'
+        );
+
+        await human.load();
+
+        await human.warmup();
+
+        setStatus(
+          'Mira directamente a la cámara.'
+        );
+
+        detectionLoop();
+
+      } catch (error) {
+
+        console.error(error);
+
+        setStatus(
+          error.message ||
+          'No fue posible iniciar la cámara.',
+          true
+        );
+
+      }
+
+    }
+
+
+    /*
+     * ========================================================
+     * CÁMARA
+     * ========================================================
+     */
+
+    async function startCamera() {
+
+      if (
+        !navigator.mediaDevices ||
+        !navigator.mediaDevices.getUserMedia
+      ) {
+
+        throw new Error(
+          'Este navegador no permite utilizar la cámara.'
+        );
+
+      }
+
+      stream =
+        await navigator
+          .mediaDevices
+          .getUserMedia({
+
+            audio: false,
+
+            video: {
+
+              facingMode: 'user',
+
+              width: {
+                ideal: 720
+              },
+
+              height: {
+                ideal: 960
+              }
+
+            }
+
+          });
+
+      video.srcObject =
+        stream;
+
+      await new Promise(resolve => {
+
+        if (
+          video.readyState >= 2
+        ) {
+
+          resolve();
+          return;
+
+        }
+
+        video.onloadedmetadata =
+          () => resolve();
+
+      });
+
+      await video.play();
+
+    }
+
+
+    /*
+     * ========================================================
+     * DETECCIÓN FACIAL
+     * ========================================================
+     */
+
+    async function detectionLoop() {
+
+      if (stopped) {
+        return;
+      }
+
+      if (
+        detectionRunning ||
+        video.readyState < 2
+      ) {
+
+        setTimeout(
+          detectionLoop,
+          250
+        );
+
+        return;
+
+      }
+
+      detectionRunning = true;
+
+      try {
+
+        const result =
+          await human.detect(
+            video
+          );
+
+        evaluateResult(
+          result
+        );
+
+      } catch (error) {
+
+        console.error(
+          'Detection:',
+          error
+        );
+
+      } finally {
+
+        detectionRunning =
+          false;
+
+        if (!stopped) {
+
+          setTimeout(
+            detectionLoop,
+            250
+          );
+
+        }
+
+      }
+
+    }
+
+
+    function evaluateResult(result) {
+
+      currentFace = null;
+
+      captureButton.disabled =
+        true;
+
+      cameraContainer
+        .classList
+        .remove('ready');
+
+      if (
+        !result ||
+        !Array.isArray(result.face)
+      ) {
+
+        setStatus(
+          'No se pudo analizar la imagen.'
+        );
+
+        return;
+
+      }
+
+      if (
+        result.face.length === 0
+      ) {
+
+        setStatus(
+          'No se detecta ningún rostro.'
+        );
+
+        return;
+
+      }
+
+      if (
+        result.face.length > 1
+      ) {
+
+        setStatus(
+          'Debe aparecer solamente una persona frente a la cámara.'
+        );
+
+        return;
+
+      }
+
+      const face =
+        result.face[0];
+
+      const confidence =
+        Number(
+          face.faceScore ||
+          face.boxScore ||
+          0
+        );
+
+      if (
+        confidence < 0.70
+      ) {
+
+        setStatus(
+          'Acércate un poco y mejora la iluminación.'
+        );
+
+        return;
+
+      }
+
+      if (
+        !face.embedding ||
+        face.embedding.length === 0
+      ) {
+
+        setStatus(
+          'Preparando perfil facial...'
+        );
+
+        return;
+
+      }
+
+      currentFace =
+        face;
+
+      cameraContainer
+        .classList
+        .add('ready');
+
+      captureButton.disabled =
+        false;
+
+      setStatus(
+        '✓ Rostro detectado. Puedes registrarlo.'
+      );
+
+    }
+
+
+    /*
+     * ========================================================
+     * CAPTURAR ROSTRO
+     * ========================================================
+     */
+
+    captureButton
+      .addEventListener(
+        'click',
+        captureFace
+      );
+
+
+    async function captureFace() {
+
+      try {
+
+        captureButton.disabled =
+          true;
+
+        setStatus(
+          'Verificando rostro...'
+        );
+
+        const result =
+          await human.detect(
+            video
+          );
+
+        if (
+          !result ||
+          result.face.length !== 1
+        ) {
+
+          throw new Error(
+            'Debe haber exactamente un rostro frente a la cámara.'
+          );
+
+        }
+
+        const face =
+          result.face[0];
+
+        if (
+          !face.embedding ||
+          !face.embedding.length
+        ) {
+
+          throw new Error(
+            'No fue posible generar el perfil facial.'
+          );
+
+        }
+
+        const embedding =
+          Array.from(
+            face.embedding
+          );
+
+        if (!window.opener) {
+
+          throw new Error(
+            'No fue posible comunicarse con la aplicación principal.'
+          );
+
+        }
+
+        setStatus(
+          'Rostro capturado correctamente.'
+        );
+
+        window.opener.postMessage(
+          {
+
+            source:
+              'face-camera-app',
+
+            action:
+              'FACE_ENROLLMENT',
+
+            token:
+              token,
+
+            embedding:
+              embedding,
+
+            model:
+              'faceres',
+
+            version:
+              human.version
+
+          },
+
+          '*'
+        );
+
+        stopCamera();
+
+        setTimeout(
+          () => window.close(),
+          700
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+        setStatus(
+          error.message ||
+          'No fue posible registrar el rostro.',
+          true
+        );
+
+        captureButton.disabled =
+          false;
+
+      }
+
+    }
+
+
+    /*
+     * ========================================================
+     * CANCELAR
+     * ========================================================
+     */
+
+    cancelButton
+      .addEventListener(
+        'click',
+        () => {
+
+          stopCamera();
+
+          window.close();
+
+        }
+      );
+
+
+    function stopCamera() {
+
+      stopped =
+        true;
+
+      if (stream) {
+
+        stream
+          .getTracks()
+          .forEach(
+            track => track.stop()
+          );
+
+      }
+
+      video.srcObject =
+        null;
+
+    }
+
+
+    window.addEventListener(
+      'beforeunload',
+      stopCamera
+    );
+
+
+    /*
+     * ========================================================
+     * UI
+     * ========================================================
+     */
+
+    function setStatus(
+      message,
+      error = false
+    ) {
+
+      statusElement.textContent =
+        message;
+
+      statusElement
+        .classList
+        .toggle(
+          'error',
+          Boolean(error)
+        );
+
+    }
+
+
+    initialize();
+
+  </script>
+
+</body>
+
+</html>
