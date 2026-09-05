@@ -1,1888 +1,251 @@
 <!DOCTYPE html>
-
 <html lang="es">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>
-    Cámara facial
-  </title>
-
-
-  <script
-    src="https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/dist/human.js"
-  ></script>
-
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cámara facial ArcFace</title>
   <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
-
-    body {
-      margin: 0;
-
-      min-height: 100vh;
-
-      background: #f5f7fa;
-
-      color: #172033;
-
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        sans-serif;
-
-      display: grid;
-
-      place-items: center;
-
-      padding: 20px;
-    }
-
-
-    .card {
-      width:
-        min(
-          500px,
-          100%
-        );
-
-      background: white;
-
-      border:
-        1px solid #e5e9ef;
-
-      border-radius: 20px;
-
-      padding: 22px;
-
-      box-shadow:
-        0 12px 40px
-        rgba(17, 24, 39, 0.08);
-    }
-
-
-    h1 {
-      margin: 0;
-
-      font-size: 21px;
-    }
-
-
-    .description {
-      margin:
-        7px
-        0
-        16px;
-
-      color: #687386;
-
-      font-size: 13px;
-
-      line-height: 1.5;
-    }
-
-
-    .tip {
-      margin-bottom: 16px;
-
-      padding: 11px 13px;
-
-      border-radius: 10px;
-
-      background: #fff7e5;
-
-      color: #725100;
-
-      font-size: 12px;
-
-      line-height: 1.5;
-    }
-
-
-    .tip.hidden {
-      display: none;
-    }
-
-
-    .camera {
-      position: relative;
-
-      width: 100%;
-
-      aspect-ratio: 3 / 4;
-
-      overflow: hidden;
-
-      background: #111827;
-
-      border-radius: 16px;
-    }
-
-
-    video {
-      width: 100%;
-      height: 100%;
-
-      object-fit: cover;
-
-      transform:
-        scaleX(-1);
-    }
-
-
-    .guide {
-      position: absolute;
-
-      left: 50%;
-      top: 50%;
-
-      width: 65%;
-      height: 58%;
-
-      transform:
-        translate(-50%, -50%);
-
-      border:
-        3px solid
-        rgba(255, 255, 255, 0.65);
-
-      border-radius: 48%;
-
-      pointer-events: none;
-    }
-
-
-    .camera.ready .guide {
-      border-color: #4ade80;
-    }
-
-
-    .progress-wrapper {
-      margin-top: 16px;
-    }
-
-
-    .progress-text {
-      margin-bottom: 7px;
-
-      color: #687386;
-
-      font-size: 12px;
-
-      text-align: center;
-    }
-
-
-    .progress-track {
-      width: 100%;
-      height: 8px;
-
-      overflow: hidden;
-
-      border-radius: 999px;
-
-      background: #e7ebf0;
-    }
-
-
-    .progress-bar {
-      width: 0%;
-      height: 100%;
-
-      background: #172033;
-
-      transition:
-        width 180ms ease;
-    }
-
-
-    .status {
-      min-height: 54px;
-
-      margin-top: 14px;
-
-      padding: 12px;
-
-      background: #f5f7fa;
-
-      border-radius: 10px;
-
-      font-size: 13px;
-
-      text-align: center;
-
-      line-height: 1.5;
-    }
-
-
-    .actions {
-      display: grid;
-
-      gap: 10px;
-
-      margin-top: 14px;
-    }
-
-
-    button {
-      min-height: 44px;
-
-      border: 0;
-      border-radius: 10px;
-
-      cursor: pointer;
-
-      font: inherit;
-      font-weight: 600;
-    }
-
-
-    #captureButton {
-      background: #172033;
-      color: white;
-    }
-
-
-    #captureButton:disabled {
-      cursor: default;
-
-      opacity: 0.45;
-    }
-
-
-    .secondary {
-      background: #eef1f5;
-      color: #172033;
-    }
-
-
-    .error {
-      color: #a93636;
-    }
-
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:#f5f7fa;color:#172033;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;display:grid;place-items:center;padding:20px}.card{width:min(500px,100%);background:#fff;border:1px solid #e5e9ef;border-radius:20px;padding:22px;box-shadow:0 12px 40px rgba(17,24,39,.08)}h1{margin:0;font-size:21px}.description{margin:7px 0 16px;color:#687386;font-size:13px;line-height:1.5}.camera{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:#111827;border-radius:16px}video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}.guide{position:absolute;left:50%;top:50%;width:64%;height:58%;transform:translate(-50%,-50%);border:3px solid rgba(255,255,255,.65);border-radius:48%;pointer-events:none}.camera.ready .guide{border-color:#4ade80}.status{min-height:58px;margin-top:14px;padding:12px;background:#f5f7fa;border-radius:10px;font-size:13px;text-align:center;line-height:1.5}.progress{margin-top:14px}.progress-text{font-size:12px;color:#687386;text-align:center;margin-bottom:7px}.track{height:8px;background:#e7ebf0;border-radius:999px;overflow:hidden}.bar{width:0;height:100%;background:#172033;transition:width .18s}.actions{display:grid;gap:10px;margin-top:14px}button{min-height:44px;border:0;border-radius:10px;cursor:pointer;font:inherit;font-weight:600}.primary{background:#172033;color:#fff}.secondary{background:#eef1f5;color:#172033}button:disabled{opacity:.45;cursor:default}.error{color:#a93636}.small{margin-top:12px;color:#687386;font-size:11px;line-height:1.5;text-align:center}
   </style>
-
 </head>
-
-
 <body>
-
   <main class="card">
-
-    <h1 id="pageTitle">
-      Cámara facial
-    </h1>
-
-
-    <p
-      id="pageDescription"
-      class="description"
-    >
-      Inicializando...
-    </p>
-
-
-    <div
-      id="glassesTip"
-      class="tip hidden"
-    >
-      Para mejorar el reconocimiento con cambios de apariencia:
-      si usas gafas, realiza las primeras muestras con ellas y
-      cuando el sistema lo indique cambia a sin gafas.
-    </div>
-
-
-    <div
-      id="cameraContainer"
-      class="camera"
-    >
-
-      <video
-        id="video"
-        autoplay
-        muted
-        playsinline
-      ></video>
-
-
-      <div class="guide"></div>
-
-    </div>
-
-
-    <div class="progress-wrapper">
-
-      <div
-        id="progressText"
-        class="progress-text"
-      >
-        Preparando...
-      </div>
-
-
-      <div class="progress-track">
-
-        <div
-          id="progressBar"
-          class="progress-bar"
-        ></div>
-
-      </div>
-
-    </div>
-
-
-    <div
-      id="status"
-      class="status"
-    >
-      Inicializando sistema...
-    </div>
-
-
-    <div class="actions">
-
-      <button
-        id="captureButton"
-        type="button"
-        disabled
-      >
-        Continuar
-      </button>
-
-
-      <button
-        id="cancelButton"
-        type="button"
-        class="secondary"
-      >
-        Cancelar
-      </button>
-
-    </div>
-
+    <h1 id="title">Cámara facial</h1>
+    <p id="description" class="description">Inicializando...</p>
+    <div id="camera" class="camera"><video id="video" autoplay muted playsinline></video><div class="guide"></div></div>
+    <div class="progress"><div id="progressText" class="progress-text">Preparando motor...</div><div class="track"><div id="bar" class="bar"></div></div></div>
+    <div id="status" class="status">Inicializando...</div>
+    <div class="actions"><button id="mainButton" class="primary" disabled>Continuar</button><button id="cancelButton" class="secondary">Cancelar</button></div>
+    <div class="small">El análisis facial y ArcFace se ejecutan en este dispositivo. No se envía la fotografía a Apps Script; solo los embeddings.</div>
   </main>
 
-
-  <script>
-
-    /**
-     * ========================================================
-     * PARÁMETROS
-     * ========================================================
-     */
-
-    var params =
-      new URLSearchParams(
-        window.location.search
-      );
-
-
-    var token =
-      params.get(
-        'token'
-      ) || '';
-
-
-    var mode =
-      params.get(
-        'mode'
-      ) || '';
-
-
-    var samplesRequired =
-      parseInt(
-        params.get(
-          'samples'
-        ) || '5',
-        10
-      );
-
-
-    var minConfidence =
-      Number(
-        params.get(
-          'minConfidence'
-        ) || '0.80'
-      );
-
-
-    if (
-      !Number.isFinite(
-        samplesRequired
-      ) ||
-      samplesRequired <
-        1
-    ) {
-
-      samplesRequired =
-        5;
-    }
-
-
-    if (
-      !Number.isFinite(
-        minConfidence
-      )
-    ) {
-
-      minConfidence =
-        0.80;
-    }
-
-
-    /**
-     * ========================================================
-     * DOM
-     * ========================================================
-     */
-
-    var video =
-      document.getElementById(
-        'video'
-      );
-
-
-    var statusElement =
-      document.getElementById(
-        'status'
-      );
-
-
-    var captureButton =
-      document.getElementById(
-        'captureButton'
-      );
-
-
-    var cancelButton =
-      document.getElementById(
-        'cancelButton'
-      );
-
-
-    var cameraContainer =
-      document.getElementById(
-        'cameraContainer'
-      );
-
-
-    var pageTitle =
-      document.getElementById(
-        'pageTitle'
-      );
-
-
-    var pageDescription =
-      document.getElementById(
-        'pageDescription'
-      );
-
-
-    var progressText =
-      document.getElementById(
-        'progressText'
-      );
-
-
-    var progressBar =
-      document.getElementById(
-        'progressBar'
-      );
-
-
-    var glassesTip =
-      document.getElementById(
-        'glassesTip'
-      );
-
-
-    /**
-     * ========================================================
-     * ESTADO
-     * ========================================================
-     */
-
-    var stream =
-      null;
-
-
-    var detectionRunning =
-      false;
-
-
-    var stopped =
-      false;
-
-
-    var capturing =
-      false;
-
-
-    var enrollmentIndex =
-      0;
-
-
-    var enrollmentEmbeddings =
-      [];
-
-
-    var enrollmentQualities =
-      [];
-
-
-    var enrollmentLabels =
-      [];
-
-
-    /**
-     * ========================================================
-     * INSTRUCCIONES DE REGISTRO
-     * ========================================================
-     */
-
-    var enrollmentInstructions = [
-
-      {
-        label:
-          'frontal_a',
-
-        text:
-          'Mira directamente al frente.'
-      },
-
-      {
-        label:
-          'izquierda_a',
-
-        text:
-          'Gira ligeramente la cabeza hacia tu izquierda.'
-      },
-
-      {
-        label:
-          'derecha_a',
-
-        text:
-          'Gira ligeramente la cabeza hacia tu derecha.'
-      },
-
-      {
-        label:
-          'frontal_b',
-
-        text:
-          'Mira nuevamente al frente. Si usas gafas, cambia ahora a con/sin gafas.'
-      },
-
-      {
-        label:
-          'izquierda_b',
-
-        text:
-          'Gira ligeramente hacia tu izquierda con esta segunda apariencia.'
-      },
-
-      {
-        label:
-          'derecha_b',
-
-        text:
-          'Última muestra: gira ligeramente hacia tu derecha.'
-      }
-
+  <canvas id="alignedCanvas" width="112" height="112" hidden></canvas>
+
+  <script type="module">
+    import * as ort from 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.29.0/dist/ort.min.mjs';
+    import {FaceLandmarker, FilesetResolver} from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/vision_bundle.mjs';
+
+    const ENGINE_ID='arcface-r100-int8-v1';
+    const ENGINE_VERSION='onnxmodelzoo-r100-int8-opset11';
+    const ARCFACE_URL='https://huggingface.co/onnxmodelzoo/arcfaceresnet100-11-int8/resolve/main/arcfaceresnet100-11-int8.onnx?download=true';
+    const LANDMARK_MODEL_URL='https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+    const params=new URLSearchParams(location.search);
+    const mode=params.get('mode')||'';
+    const token=params.get('token')||'';
+    const requestedEngine=params.get('engine')||'';
+    const samplesRequired=Math.max(1,Math.min(8,parseInt(params.get('samples')||'3',10)||3));
+
+    const video=document.getElementById('video');
+    const camera=document.getElementById('camera');
+    const statusEl=document.getElementById('status');
+    const titleEl=document.getElementById('title');
+    const descriptionEl=document.getElementById('description');
+    const button=document.getElementById('mainButton');
+    const cancelButton=document.getElementById('cancelButton');
+    const progressText=document.getElementById('progressText');
+    const bar=document.getElementById('bar');
+    const alignedCanvas=document.getElementById('alignedCanvas');
+    const alignedCtx=alignedCanvas.getContext('2d',{willReadFrequently:true});
+
+    let stream=null;
+    let landmarker=null;
+    let arcSession=null;
+    let running=false;
+    let stopped=false;
+    let previewTimer=null;
+
+    const TEMPLATE=[
+      {x:38.2946,y:51.6963},{x:73.5318,y:51.5014},{x:56.0252,y:71.7366},{x:41.5493,y:92.3655},{x:70.7299,y:92.2041}
     ];
 
+    configureUi();
+    initialize();
 
-    function getEnrollmentInstruction(
-      index
-    ) {
-
-      if (
-        enrollmentInstructions[
-          index
-        ]
-      ) {
-
-        return enrollmentInstructions[
-          index
-        ];
-
+    function configureUi(){
+      if(mode==='register'){
+        titleEl.textContent='Registrar perfil facial';
+        descriptionEl.textContent='Mira normalmente a la cámara. El sistema capturará varias muestras automáticamente; no necesitas usar el mismo dispositivo después.';
+        button.textContent='Iniciar registro';
+      }else{
+        titleEl.textContent='Reconocer persona';
+        descriptionEl.textContent='Mira a la cámara. ArcFace alineará el rostro y verificará varias muestras.';
+        button.textContent='Verificar identidad';
       }
-
-
-      return {
-
-        label:
-          'muestra_' +
-          (
-            index + 1
-          ),
-
-        text:
-          'Cambia ligeramente tu posición y mira nuevamente a la cámara.'
-
-      };
+      updateProgress(0);
     }
 
-
-    /**
-     * ========================================================
-     * CONFIGURAR UI
-     * ========================================================
-     */
-
-    if (
-      mode ===
-      'recognize'
-    ) {
-
-      document.title =
-        'Reconocer persona';
-
-
-      pageTitle.textContent =
-        'Reconocer persona';
-
-
-      pageDescription.textContent =
-        'Mantén el rostro visible. El sistema tomará varias muestras automáticamente.';
-
-
-      captureButton.textContent =
-        'Verificar identidad';
-
-
-      glassesTip.classList.add(
-        'hidden'
-      );
-
-    } else {
-
-      document.title =
-        'Registrar perfil facial';
-
-
-      pageTitle.textContent =
-        'Registrar perfil facial';
-
-
-      pageDescription.textContent =
-        'Crearemos un perfil con varias muestras para mejorar la precisión.';
-
-
-      captureButton.textContent =
-        'Capturar muestra 1/' +
-        samplesRequired;
-
-
-      glassesTip.classList.remove(
-        'hidden'
-      );
-
-    }
-
-
-    /**
-     * ========================================================
-     * HUMAN
-     * ========================================================
-     */
-
-    var humanConfig = {
-
-      backend:
-        'webgl',
-
-      modelBasePath:
-        'https://cdn.jsdelivr.net/npm/@vladmandic/human@3.3.6/models/',
-
-      cacheSensitivity:
-        0.01,
-
-      filter: {
-
-        enabled:
-          true,
-
-        equalization:
-          true
-
-      },
-
-      face: {
-
-        enabled:
-          true,
-
-        detector: {
-
-          rotation:
-            true,
-
-          maxDetected:
-            2,
-
-          minConfidence:
-            minConfidence
-
-        },
-
-        mesh: {
-
-          enabled:
-            true
-
-        },
-
-        description: {
-
-          enabled:
-            true
-
-        },
-
-        iris: {
-
-          enabled:
-            false
-
-        },
-
-        emotion: {
-
-          enabled:
-            false
-
-        },
-
-        antispoof: {
-
-          enabled:
-            false
-
-        },
-
-        liveness: {
-
-          enabled:
-            false
-
-        }
-
-      },
-
-      body: {
-
-        enabled:
-          false
-
-      },
-
-      hand: {
-
-        enabled:
-          false
-
-      },
-
-      object: {
-
-        enabled:
-          false
-
-      },
-
-      gesture: {
-
-        enabled:
-          false
-
-      }
-
-    };
-
-
-    var human =
-      new Human.Human(
-        humanConfig
-      );
-
-
-    /**
-     * ========================================================
-     * INICIO
-     * ========================================================
-     */
-
-    async function initialize() {
-
-      try {
-
-        if (
-          !token ||
-          (
-            mode !==
-              'register' &&
-            mode !==
-              'recognize'
-          )
-        ) {
-
-          throw new Error(
-            'La sesión facial no es válida.'
-          );
-
-        }
-
-
-        setStatus(
-          'Solicitando permiso para utilizar la cámara...'
-        );
-
-
+    async function initialize(){
+      try{
+        if(!token||!['register','recognize'].includes(mode))throw new Error('La sesión facial no es válida.');
+        if(requestedEngine&&requestedEngine!==ENGINE_ID)throw new Error('El motor biométrico solicitado no coincide con esta cámara.');
+        setStatus('Solicitando permiso para utilizar la cámara...');
         await startCamera();
-
-
-        setStatus(
-          'Cargando modelo de reconocimiento facial...'
-        );
-
-
-        await human.load();
-
-
-        await human.warmup();
-
-
-        if (
-          mode ===
-          'register'
-        ) {
-
-          updateEnrollmentInstruction();
-
-        } else {
-
-          setStatus(
-            'Mira directamente a la cámara.'
-          );
-
-
-          updateProgress(
-            0,
-            samplesRequired
-          );
-
-        }
-
-
-        detectionLoop();
-
-
-      } catch (error) {
-
-        console.error(
-          error
-        );
-
-
-        setStatus(
-          error &&
-          error.message
-            ? error.message
-            : 'No fue posible iniciar la cámara.',
-          true
-        );
-
-      }
-
+        setStatus('Cargando detector y puntos faciales...');
+        await loadLandmarker();
+        setStatus('Cargando ArcFace por primera vez. Puede tardar un poco en celular...');
+        await loadArcFace();
+        setStatus('Motor listo. Mantén un solo rostro visible y bien iluminado.');
+        button.disabled=false;
+        startPreview();
+      }catch(e){console.error(e);setStatus(e.message||'No fue posible iniciar el motor facial.',true)}
     }
 
-
-    /**
-     * ========================================================
-     * CÁMARA
-     * ========================================================
-     */
-
-    async function startCamera() {
-
-      if (
-        !navigator.mediaDevices ||
-        !navigator.mediaDevices.getUserMedia
-      ) {
-
-        throw new Error(
-          'Este navegador no permite utilizar la cámara.'
-        );
-
-      }
-
-
-      stream =
-        await navigator
-          .mediaDevices
-          .getUserMedia({
-
-            audio:
-              false,
-
-            video: {
-
-              facingMode:
-                'user',
-
-              width: {
-                ideal:
-                  720
-              },
-
-              height: {
-                ideal:
-                  960
-              }
-
-            }
-
-          });
-
-
-      video.srcObject =
-        stream;
-
-
-      await new Promise(
-        function(resolve) {
-
-          if (
-            video.readyState >=
-            2
-          ) {
-
-            resolve();
-
-            return;
-
-          }
-
-
-          video.onloadedmetadata =
-            function() {
-
-              resolve();
-
-            };
-
-        }
-      );
-
-
+    async function startCamera(){
+      if(!navigator.mediaDevices?.getUserMedia)throw new Error('Este navegador no permite usar la cámara.');
+      stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user',width:{ideal:1280},height:{ideal:960}}});
+      video.srcObject=stream;
+      await new Promise(resolve=>{if(video.readyState>=2)return resolve();video.onloadedmetadata=resolve});
       await video.play();
     }
 
-
-    /**
-     * ========================================================
-     * LOOP DETECCIÓN
-     * ========================================================
-     */
-
-    async function detectionLoop() {
-
-      if (
-        stopped
-      ) {
-
-        return;
-      }
-
-
-      /*
-       * Mientras capturamos varias muestras
-       * no ejecutar detección paralela.
-       */
-      if (
-        capturing
-      ) {
-
-        setTimeout(
-          detectionLoop,
-          200
-        );
-
-
-        return;
-      }
-
-
-      if (
-        detectionRunning ||
-        video.readyState <
-          2
-      ) {
-
-        setTimeout(
-          detectionLoop,
-          200
-        );
-
-
-        return;
-      }
-
-
-      detectionRunning =
-        true;
-
-
-      try {
-
-        var result =
-          await human.detect(
-            video
-          );
-
-
-        evaluatePreview(
-          result
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          'Detection:',
-          error
-        );
-
-
-      } finally {
-
-        detectionRunning =
-          false;
-
-
-        if (
-          !stopped
-        ) {
-
-          setTimeout(
-            detectionLoop,
-            250
-          );
-
-        }
-
-      }
-
+    async function loadLandmarker(){
+      const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@1.0.1/wasm');
+      landmarker=await FaceLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:LANDMARK_MODEL_URL},runningMode:'VIDEO',numFaces:2,minFaceDetectionConfidence:.65,minFacePresenceConfidence:.65,minTrackingConfidence:.60,outputFaceBlendshapes:false,outputFacialTransformationMatrixes:false});
     }
 
-
-    function evaluatePreview(
-      result
-    ) {
-
-      captureButton.disabled =
-        true;
-
-
-      cameraContainer
-        .classList
-        .remove(
-          'ready'
-        );
-
-
-      var validation =
-        validateDetection(
-          result
-        );
-
-
-      if (
-        !validation.ok
-      ) {
-
-        setStatus(
-          validation.message
-        );
-
-
-        return;
-      }
-
-
-      cameraContainer
-        .classList
-        .add(
-          'ready'
-        );
-
-
-      captureButton.disabled =
-        false;
-
-
-      if (
-        mode ===
-        'register'
-      ) {
-
-        var instruction =
-          getEnrollmentInstruction(
-            enrollmentIndex
-          );
-
-
-        setStatus(
-          instruction.text
-        );
-
-      } else {
-
-        setStatus(
-          '✓ Rostro preparado. Pulsa Verificar identidad.'
-        );
-
-      }
-
+    async function loadArcFace(){
+      ort.env.wasm.numThreads=1;
+      ort.env.wasm.wasmPaths='https://cdn.jsdelivr.net/npm/onnxruntime-web@1.29.0/dist/';
+      const response=await fetch(ARCFACE_URL,{cache:'force-cache'});
+      if(!response.ok)throw new Error('No fue posible descargar el modelo ArcFace ('+response.status+').');
+      const modelBuffer=await response.arrayBuffer();
+      arcSession=await ort.InferenceSession.create(modelBuffer,{executionProviders:['wasm'],graphOptimizationLevel:'all'});
+      if(!arcSession.inputNames?.length||!arcSession.outputNames?.length)throw new Error('El modelo ArcFace no expone entradas/salidas válidas.');
     }
 
-
-    /**
-     * ========================================================
-     * VALIDAR DETECCIÓN
-     * ========================================================
-     */
-
-    function validateDetection(
-      result
-    ) {
-
-      if (
-        !result ||
-        !Array.isArray(
-          result.face
-        )
-      ) {
-
-        return {
-          ok: false,
-          message:
-            'No se pudo analizar la imagen.'
-        };
-
-      }
-
-
-      if (
-        result.face.length ===
-        0
-      ) {
-
-        return {
-          ok: false,
-          message:
-            'No se detecta ningún rostro.'
-        };
-
-      }
-
-
-      if (
-        result.face.length >
-        1
-      ) {
-
-        return {
-          ok: false,
-          message:
-            'Debe aparecer solamente una persona frente a la cámara.'
-        };
-
-      }
-
-
-      var face =
-        result.face[0];
-
-
-      var confidence =
-        Number(
-          face.faceScore ||
-          face.boxScore ||
-          0
-        );
-
-
-      if (
-        confidence <
-        minConfidence
-      ) {
-
-        return {
-          ok: false,
-          message:
-            'Mejora la iluminación o acércate ligeramente a la cámara.'
-        };
-
-      }
-
-
-      if (
-        !face.embedding ||
-        !face.embedding.length
-      ) {
-
-        return {
-          ok: false,
-          message:
-            'Preparando perfil facial...'
-        };
-
-      }
-
-
-      return {
-
-        ok: true,
-
-        face:
-          face,
-
-        confidence:
-          confidence
-
+    function startPreview(){
+      const tick=()=>{
+        if(stopped||running)return;
+        try{
+          const face=getSingleFace();
+          if(face.ok){camera.classList.add('ready');setStatus('✓ Rostro preparado. Puedes continuar.');button.disabled=false}else{camera.classList.remove('ready');setStatus(face.message);button.disabled=true}
+        }catch(e){console.warn(e)}
+        previewTimer=setTimeout(tick,300);
       };
+      tick();
     }
 
+    function getSingleFace(){
+      if(!landmarker||video.readyState<2)return{ok:false,message:'Preparando cámara...'};
+      const result=landmarker.detectForVideo(video,performance.now());
+      const faces=result.faceLandmarks||[];
+      if(faces.length===0)return{ok:false,message:'No se detecta ningún rostro.'};
+      if(faces.length>1)return{ok:false,message:'Debe aparecer solamente una persona.'};
+      const lm=faces[0];
+      const q=validateFaceGeometry(lm);
+      if(!q.ok)return q;
+      return{ok:true,landmarks:lm,quality:q.quality};
+    }
 
-    /**
-     * ========================================================
-     * BOTÓN PRINCIPAL
-     * ========================================================
-     */
+    function validateFaceGeometry(lm){
+      let minX=1,maxX=0,minY=1,maxY=0;
+      lm.forEach(p=>{minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y)});
+      const w=maxX-minX,h=maxY-minY,cx=(minX+maxX)/2,cy=(minY+maxY)/2;
+      if(w<.24||h<.30)return{ok:false,message:'Acércate un poco a la cámara.'};
+      if(w>.82||h>.90)return{ok:false,message:'Aléjate ligeramente de la cámara.'};
+      if(Math.abs(cx-.5)>.20||Math.abs(cy-.5)>.22)return{ok:false,message:'Centra el rostro dentro de la guía.'};
+      const quality=Math.max(0,Math.min(1,(w/.45)*(.20/Math.max(.20,Math.abs(cx-.5)+.20))));
+      return{ok:true,quality};
+    }
 
-    captureButton
-      .addEventListener(
-        'click',
-        function() {
+    function averagePoint(lm,a,b){return{x:(lm[a].x+lm[b].x)*video.videoWidth/2,y:(lm[a].y+lm[b].y)*video.videoHeight/2}}
+    function pixelPoint(lm,i){return{x:lm[i].x*video.videoWidth,y:lm[i].y*video.videoHeight}}
 
-          if (
-            mode ===
-            'register'
-          ) {
+    function extractFivePoints(lm){
+      let eye1=averagePoint(lm,33,133),eye2=averagePoint(lm,362,263);
+      let mouth1=pixelPoint(lm,61),mouth2=pixelPoint(lm,291);
+      const eyes=[eye1,eye2].sort((a,b)=>a.x-b.x);
+      const mouths=[mouth1,mouth2].sort((a,b)=>a.x-b.x);
+      return[eyes[0],eyes[1],pixelPoint(lm,1),mouths[0],mouths[1]];
+    }
 
-            captureEnrollmentSample();
-
-          } else {
-
-            captureRecognitionBatch();
-
-          }
-
-        }
-      );
-
-
-    /**
-     * ========================================================
-     * REGISTRO MULTI-MUESTRA
-     * ========================================================
-     */
-
-    async function captureEnrollmentSample() {
-
-      if (
-        capturing
-      ) {
-
-        return;
+    function estimateSimilarity(src,dst){
+      let cs={x:0,y:0},ct={x:0,y:0};
+      for(let i=0;i<src.length;i++){cs.x+=src[i].x;cs.y+=src[i].y;ct.x+=dst[i].x;ct.y+=dst[i].y}
+      cs.x/=src.length;cs.y/=src.length;ct.x/=dst.length;ct.y/=dst.length;
+      let A=0,B=0,D=0;
+      for(let i=0;i<src.length;i++){
+        const sx=src[i].x-cs.x,sy=src[i].y-cs.y,tx=dst[i].x-ct.x,ty=dst[i].y-ct.y;
+        A+=sx*tx+sy*ty;B+=sx*ty-sy*tx;D+=sx*sx+sy*sy;
       }
+      if(D<1e-6)throw new Error('No fue posible alinear el rostro.');
+      const R=Math.hypot(A,B);if(R<1e-6)throw new Error('No fue posible estimar la orientación facial.');
+      const scale=R/D,cos=A/R,sin=B/R;
+      const a=scale*cos,b=scale*sin,c=-scale*sin,d=scale*cos;
+      const e=ct.x-(a*cs.x+c*cs.y),f=ct.y-(b*cs.x+d*cs.y);
+      return{a,b,c,d,e,f};
+    }
 
+    function renderAlignedFace(lm){
+      const M=estimateSimilarity(extractFivePoints(lm),TEMPLATE);
+      alignedCtx.save();
+      alignedCtx.setTransform(1,0,0,1,0,0);alignedCtx.fillStyle='black';alignedCtx.fillRect(0,0,112,112);
+      alignedCtx.setTransform(M.a,M.b,M.c,M.d,M.e,M.f);
+      alignedCtx.drawImage(video,0,0,video.videoWidth,video.videoHeight);
+      alignedCtx.restore();
+    }
 
-      capturing =
-        true;
-
-
-      captureButton.disabled =
-        true;
-
-
-      try {
-
-        setStatus(
-          'Capturando muestra...'
-        );
-
-
-        var captured =
-          await captureValidFace(
-            4
-          );
-
-
-        enrollmentEmbeddings.push(
-          Array.from(
-            captured.face.embedding
-          )
-        );
-
-
-        enrollmentQualities.push(
-          captured.confidence
-        );
-
-
-        var instruction =
-          getEnrollmentInstruction(
-            enrollmentIndex
-          );
-
-
-        enrollmentLabels.push(
-          instruction.label
-        );
-
-
-        enrollmentIndex++;
-
-
-        updateProgress(
-          enrollmentIndex,
-          samplesRequired
-        );
-
-
-        if (
-          enrollmentIndex >=
-          samplesRequired
-        ) {
-
-          setStatus(
-            'Perfil completo. Enviando muestras para validación...'
-          );
-
-
-          sendEnrollmentBatch();
-
-
-          return;
-        }
-
-
-        /*
-         * Pequeño espacio temporal para evitar
-         * capturar exactamente el mismo instante.
-         */
-        await sleep(
-          650
-        );
-
-
-        capturing =
-          false;
-
-
-        updateEnrollmentInstruction();
-
-
-      } catch (error) {
-
-        console.error(
-          error
-        );
-
-
-        capturing =
-          false;
-
-
-        captureButton.disabled =
-          false;
-
-
-        setStatus(
-          error &&
-          error.message
-            ? error.message
-            : 'No fue posible capturar la muestra.',
-          true
-        );
-
+    async function embeddingFromLandmarks(lm){
+      renderAlignedFace(lm);
+      const img=alignedCtx.getImageData(0,0,112,112).data;
+      const plane=112*112;
+      const input=new Float32Array(3*plane);
+      for(let i=0;i<plane;i++){
+        const j=i*4;
+        input[i]=img[j];
+        input[plane+i]=img[j+1];
+        input[2*plane+i]=img[j+2];
       }
-
+      const tensor=new ort.Tensor('float32',input,[1,3,112,112]);
+      const feeds={};feeds[arcSession.inputNames[0]]=tensor;
+      const out=await arcSession.run(feeds);
+      const raw=Array.from(out[arcSession.outputNames[0]].data);
+      if(raw.length!==512)throw new Error('ArcFace devolvió un embedding inesperado de '+raw.length+' dimensiones.');
+      return l2Normalize(raw);
     }
 
-
-    function updateEnrollmentInstruction() {
-
-      var instruction =
-        getEnrollmentInstruction(
-          enrollmentIndex
-        );
-
-
-      captureButton.textContent =
-        'Capturar muestra ' +
-        (
-          enrollmentIndex + 1
-        ) +
-        '/' +
-        samplesRequired;
-
-
-      setStatus(
-        instruction.text
-      );
-
-
-      updateProgress(
-        enrollmentIndex,
-        samplesRequired
-      );
+    function l2Normalize(v){
+      const n=Math.sqrt(v.reduce((s,x)=>s+x*x,0));
+      if(!Number.isFinite(n)||n<1e-9)throw new Error('ArcFace produjo un embedding vacío.');
+      return v.map(x=>x/n);
     }
 
+    button.addEventListener('click',captureBatch);
+    cancelButton.addEventListener('click',()=>{stopAll();window.close()});
 
-    function sendEnrollmentBatch() {
-
-      if (
-        !window.opener
-      ) {
-
-        throw new Error(
-          'No fue posible comunicarse con la aplicación principal.'
-        );
-
-      }
-
-
-      window.opener.postMessage(
-
-        {
-
-          source:
-            'face-camera-app',
-
-          action:
-            'FACE_ENROLLMENT_BATCH',
-
-          token:
-            token,
-
-          embeddings:
-            enrollmentEmbeddings,
-
-          qualities:
-            enrollmentQualities,
-
-          labels:
-            enrollmentLabels,
-
-          model:
-            'faceres',
-
-          version:
-            human.version
-
-        },
-
-        '*'
-
-      );
-
-
-      stopCamera();
-
-
-      setTimeout(
-        function() {
-
-          window.close();
-
-        },
-        900
-      );
-    }
-
-
-    /**
-     * ========================================================
-     * RECONOCIMIENTO MULTI-FRAME
-     * ========================================================
-     */
-
-    async function captureRecognitionBatch() {
-
-      if (
-        capturing
-      ) {
-
-        return;
-      }
-
-
-      capturing =
-        true;
-
-
-      captureButton.disabled =
-        true;
-
-
-      var embeddings =
-        [];
-
-
-      try {
-
-        for (
-          var i = 0;
-          i < samplesRequired;
-          i++
-        ) {
-
-          setStatus(
-            'Analizando muestra ' +
-            (
-              i + 1
-            ) +
-            ' de ' +
-            samplesRequired +
-            '...'
-          );
-
-
-          var captured =
-            await captureValidFace(
-              5
-            );
-
-
-          embeddings.push(
-            Array.from(
-              captured.face.embedding
-            )
-          );
-
-
-          updateProgress(
-            i + 1,
-            samplesRequired
-          );
-
-
-          if (
-            i <
-            samplesRequired - 1
-          ) {
-
-            await sleep(
-              350
-            );
-
-          }
-
+    async function captureBatch(){
+      if(running)return;
+      running=true;button.disabled=true;if(previewTimer)clearTimeout(previewTimer);
+      const embeddings=[],qualities=[];
+      try{
+        for(let i=0;i<samplesRequired;i++){
+          setStatus((mode==='register'?'Creando perfil':'Verificando identidad')+' · muestra '+(i+1)+' de '+samplesRequired+'...');
+          const face=await waitForValidFace(12);
+          embeddings.push(await embeddingFromLandmarks(face.landmarks));
+          qualities.push(face.quality);
+          updateProgress(i+1);
+          if(i<samplesRequired-1)await sleep(350);
         }
+        if(!window.opener)throw new Error('No fue posible comunicarse con la aplicación principal.');
+        window.opener.postMessage({source:'face-camera-app',action:mode==='register'?'FACE_ENROLLMENT_ARCFACE':'FACE_RECOGNITION_ARCFACE',token,embeddings,qualities,model:ENGINE_ID,version:ENGINE_VERSION,device:deviceLabel()},'*');
+        setStatus('✓ Proceso completado.');stopAll();setTimeout(()=>window.close(),800);
+      }catch(e){console.error(e);running=false;button.disabled=false;setStatus(e.message||'No fue posible procesar el rostro.',true);startPreview()}
+    }
 
-
-        setStatus(
-          'Muestras obtenidas. Comparando identidad...'
-        );
-
-
-        if (
-          !window.opener
-        ) {
-
-          throw new Error(
-            'No fue posible comunicarse con la aplicación principal.'
-          );
-
-        }
-
-
-        window.opener.postMessage(
-
-          {
-
-            source:
-              'face-camera-app',
-
-            action:
-              'FACE_RECOGNITION_BATCH',
-
-            token:
-              token,
-
-            embeddings:
-              embeddings,
-
-            model:
-              'faceres',
-
-            version:
-              human.version
-
-          },
-
-          '*'
-
-        );
-
-
-        stopCamera();
-
-
-        setTimeout(
-          function() {
-
-            window.close();
-
-          },
-          900
-        );
-
-
-      } catch (error) {
-
-        console.error(
-          error
-        );
-
-
-        capturing =
-          false;
-
-
-        captureButton.disabled =
-          false;
-
-
-        updateProgress(
-          0,
-          samplesRequired
-        );
-
-
-        setStatus(
-          error &&
-          error.message
-            ? error.message
-            : 'No fue posible obtener muestras consistentes.',
-          true
-        );
-
+    async function waitForValidFace(maxAttempts){
+      let last='No fue posible obtener una captura facial válida.';
+      for(let i=0;i<maxAttempts;i++){
+        const f=getSingleFace();if(f.ok)return f;last=f.message;await sleep(180);
       }
-
+      throw new Error(last);
     }
 
-
-    /**
-     * ========================================================
-     * CAPTURAR UNA MUESTRA VÁLIDA
-     * ========================================================
-     */
-
-    async function captureValidFace(
-      maxAttempts
-    ) {
-
-      var lastMessage =
-        'No fue posible obtener una muestra facial válida.';
-
-
-      for (
-        var attempt = 0;
-        attempt < maxAttempts;
-        attempt++
-      ) {
-
-        var result =
-          await human.detect(
-            video
-          );
-
-
-        var validation =
-          validateDetection(
-            result
-          );
-
-
-        if (
-          validation.ok
-        ) {
-
-          return validation;
-
-        }
-
-
-        lastMessage =
-          validation.message;
-
-
-        await sleep(
-          250
-        );
-
-      }
-
-
-      throw new Error(
-        lastMessage
-      );
-    }
-
-
-    /**
-     * ========================================================
-     * PROGRESO
-     * ========================================================
-     */
-
-    function updateProgress(
-      current,
-      total
-    ) {
-
-      var percent =
-        total > 0
-          ? (
-              current /
-              total
-            ) *
-            100
-          : 0;
-
-
-      progressBar.style.width =
-        percent +
-        '%';
-
-
-      progressText.textContent =
-        current +
-        ' de ' +
-        total +
-        ' muestras';
-    }
-
-
-    /**
-     * ========================================================
-     * CANCELAR
-     * ========================================================
-     */
-
-    cancelButton
-      .addEventListener(
-        'click',
-        function() {
-
-          stopCamera();
-
-          window.close();
-
-        }
-      );
-
-
-    function stopCamera() {
-
-      stopped =
-        true;
-
-
-      if (
-        stream
-      ) {
-
-        stream
-          .getTracks()
-          .forEach(
-            function(track) {
-
-              track.stop();
-
-            }
-          );
-
-      }
-
-
-      video.srcObject =
-        null;
-    }
-
-
-    window.addEventListener(
-      'beforeunload',
-      stopCamera
-    );
-
-
-    /**
-     * ========================================================
-     * AUXILIARES
-     * ========================================================
-     */
-
-    function sleep(
-      milliseconds
-    ) {
-
-      return new Promise(
-        function(resolve) {
-
-          setTimeout(
-            resolve,
-            milliseconds
-          );
-
-        }
-      );
-    }
-
-
-    function setStatus(
-      message,
-      error
-    ) {
-
-      statusElement.textContent =
-        message;
-
-
-      statusElement
-        .classList
-        .toggle(
-          'error',
-          Boolean(
-            error
-          )
-        );
-    }
-
-
-    initialize();
-
+    function updateProgress(current){bar.style.width=((current/samplesRequired)*100)+'%';progressText.textContent=current+' de '+samplesRequired+' muestras'}
+    function setStatus(msg,error=false){statusEl.textContent=msg;statusEl.classList.toggle('error',!!error)}
+    function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+    function deviceLabel(){if(navigator.userAgentData?.mobile)return'movil';return /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)?'movil':'desktop'}
+    function stopAll(){stopped=true;if(previewTimer)clearTimeout(previewTimer);if(stream)stream.getTracks().forEach(t=>t.stop());video.srcObject=null}
+    window.addEventListener('beforeunload',stopAll);
   </script>
-
 </body>
-
 </html>
