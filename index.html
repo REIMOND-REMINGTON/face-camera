@@ -12,7 +12,7 @@
   >
 
   <title>
-    Reconocimiento facial
+    Cámara facial
   </title>
 
 
@@ -24,24 +24,18 @@
   <style>
 
     * {
-      box-sizing:
-        border-box;
+      box-sizing: border-box;
     }
 
 
     body {
+      margin: 0;
 
-      margin:
-        0;
+      min-height: 100vh;
 
-      min-height:
-        100vh;
+      background: #f5f7fa;
 
-      background:
-        #f5f7fa;
-
-      color:
-        #172033;
+      color: #172033;
 
       font-family:
         -apple-system,
@@ -49,272 +43,233 @@
         "Segoe UI",
         sans-serif;
 
-      display:
-        grid;
+      display: grid;
 
-      place-items:
-        center;
+      place-items: center;
 
-      padding:
-        20px;
-
+      padding: 20px;
     }
 
 
     .card {
-
       width:
         min(
-          480px,
+          500px,
           100%
         );
 
-      background:
-        white;
+      background: white;
 
       border:
-        1px solid
-        #e5e9ef;
+        1px solid #e5e9ef;
 
-      border-radius:
-        20px;
+      border-radius: 20px;
 
-      padding:
-        22px;
+      padding: 22px;
 
       box-shadow:
         0 12px 40px
-        rgba(
-          17,
-          24,
-          39,
-          0.08
-        );
-
+        rgba(17, 24, 39, 0.08);
     }
 
 
     h1 {
+      margin: 0;
 
-      margin:
-        0;
-
-      font-size:
-        21px;
-
+      font-size: 21px;
     }
 
 
     .description {
-
       margin:
-        7px 0 20px;
+        7px
+        0
+        16px;
 
-      color:
-        #687386;
+      color: #687386;
 
-      font-size:
-        13px;
+      font-size: 13px;
 
-      line-height:
-        1.5;
+      line-height: 1.5;
+    }
 
+
+    .tip {
+      margin-bottom: 16px;
+
+      padding: 11px 13px;
+
+      border-radius: 10px;
+
+      background: #fff7e5;
+
+      color: #725100;
+
+      font-size: 12px;
+
+      line-height: 1.5;
+    }
+
+
+    .tip.hidden {
+      display: none;
     }
 
 
     .camera {
+      position: relative;
 
-      position:
-        relative;
+      width: 100%;
 
-      width:
-        100%;
+      aspect-ratio: 3 / 4;
 
-      aspect-ratio:
-        3 / 4;
+      overflow: hidden;
 
-      overflow:
-        hidden;
+      background: #111827;
 
-      background:
-        #111827;
-
-      border-radius:
-        16px;
-
+      border-radius: 16px;
     }
 
 
     video {
+      width: 100%;
+      height: 100%;
 
-      width:
-        100%;
-
-      height:
-        100%;
-
-      object-fit:
-        cover;
+      object-fit: cover;
 
       transform:
         scaleX(-1);
-
     }
 
 
     .guide {
+      position: absolute;
 
-      position:
-        absolute;
+      left: 50%;
+      top: 50%;
 
-      left:
-        50%;
-
-      top:
-        50%;
-
-      width:
-        65%;
-
-      height:
-        58%;
+      width: 65%;
+      height: 58%;
 
       transform:
-        translate(
-          -50%,
-          -50%
-        );
+        translate(-50%, -50%);
 
       border:
         3px solid
-        rgba(
-          255,
-          255,
-          255,
-          0.65
-        );
+        rgba(255, 255, 255, 0.65);
 
-      border-radius:
-        48%;
+      border-radius: 48%;
 
-      pointer-events:
-        none;
-
+      pointer-events: none;
     }
 
 
     .camera.ready .guide {
+      border-color: #4ade80;
+    }
 
-      border-color:
-        #4ade80;
 
+    .progress-wrapper {
+      margin-top: 16px;
+    }
+
+
+    .progress-text {
+      margin-bottom: 7px;
+
+      color: #687386;
+
+      font-size: 12px;
+
+      text-align: center;
+    }
+
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+
+      overflow: hidden;
+
+      border-radius: 999px;
+
+      background: #e7ebf0;
+    }
+
+
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+
+      background: #172033;
+
+      transition:
+        width 180ms ease;
     }
 
 
     .status {
+      min-height: 54px;
 
-      min-height:
-        50px;
+      margin-top: 14px;
 
-      margin-top:
-        16px;
+      padding: 12px;
 
-      padding:
-        12px;
+      background: #f5f7fa;
 
-      background:
-        #f5f7fa;
+      border-radius: 10px;
 
-      border-radius:
-        10px;
+      font-size: 13px;
 
-      font-size:
-        13px;
+      text-align: center;
 
-      text-align:
-        center;
-
-      line-height:
-        1.5;
-
+      line-height: 1.5;
     }
 
 
     .actions {
+      display: grid;
 
-      display:
-        grid;
+      gap: 10px;
 
-      gap:
-        10px;
-
-      margin-top:
-        14px;
-
+      margin-top: 14px;
     }
 
 
     button {
+      min-height: 44px;
 
-      min-height:
-        44px;
+      border: 0;
+      border-radius: 10px;
 
-      border:
-        0;
+      cursor: pointer;
 
-      border-radius:
-        10px;
-
-      cursor:
-        pointer;
-
-      font:
-        inherit;
-
-      font-weight:
-        600;
-
+      font: inherit;
+      font-weight: 600;
     }
 
 
     #captureButton {
-
-      background:
-        #172033;
-
-      color:
-        white;
-
+      background: #172033;
+      color: white;
     }
 
 
     #captureButton:disabled {
+      cursor: default;
 
-      cursor:
-        default;
-
-      opacity:
-        0.45;
-
+      opacity: 0.45;
     }
 
 
     .secondary {
-
-      background:
-        #eef1f5;
-
-      color:
-        #172033;
-
+      background: #eef1f5;
+      color: #172033;
     }
 
 
     .error {
-
-      color:
-        #a93636;
-
+      color: #a93636;
     }
 
   </style>
@@ -340,6 +295,16 @@
 
 
     <div
+      id="glassesTip"
+      class="tip hidden"
+    >
+      Para mejorar el reconocimiento con cambios de apariencia:
+      si usas gafas, realiza las primeras muestras con ellas y
+      cuando el sistema lo indique cambia a sin gafas.
+    </div>
+
+
+    <div
       id="cameraContainer"
       class="camera"
     >
@@ -352,9 +317,29 @@
       ></video>
 
 
+      <div class="guide"></div>
+
+    </div>
+
+
+    <div class="progress-wrapper">
+
       <div
-        class="guide"
-      ></div>
+        id="progressText"
+        class="progress-text"
+      >
+        Preparando...
+      </div>
+
+
+      <div class="progress-track">
+
+        <div
+          id="progressBar"
+          class="progress-bar"
+        ></div>
+
+      </div>
 
     </div>
 
@@ -417,6 +402,47 @@
       ) || '';
 
 
+    var samplesRequired =
+      parseInt(
+        params.get(
+          'samples'
+        ) || '5',
+        10
+      );
+
+
+    var minConfidence =
+      Number(
+        params.get(
+          'minConfidence'
+        ) || '0.80'
+      );
+
+
+    if (
+      !Number.isFinite(
+        samplesRequired
+      ) ||
+      samplesRequired <
+        1
+    ) {
+
+      samplesRequired =
+        5;
+    }
+
+
+    if (
+      !Number.isFinite(
+        minConfidence
+      )
+    ) {
+
+      minConfidence =
+        0.80;
+    }
+
+
     /**
      * ========================================================
      * DOM
@@ -465,50 +491,22 @@
       );
 
 
-    /**
-     * ========================================================
-     * CONFIGURAR MODO
-     * ========================================================
-     */
-
-    if (
-      mode ===
-      'recognize'
-    ) {
-
-      document.title =
-        'Reconocer persona';
+    var progressText =
+      document.getElementById(
+        'progressText'
+      );
 
 
-      pageTitle.textContent =
-        'Reconocer persona';
+    var progressBar =
+      document.getElementById(
+        'progressBar'
+      );
 
 
-      pageDescription.textContent =
-        'Mira directamente a la cámara para verificar tu identidad.';
-
-
-      captureButton.textContent =
-        'Verificar identidad';
-
-    } else {
-
-      document.title =
-        'Registrar rostro';
-
-
-      pageTitle.textContent =
-        'Registrar rostro';
-
-
-      pageDescription.textContent =
-        'Mira directamente a la cámara y procura tener buena iluminación.';
-
-
-      captureButton.textContent =
-        'Registrar rostro';
-
-    }
+    var glassesTip =
+      document.getElementById(
+        'glassesTip'
+      );
 
 
     /**
@@ -531,6 +529,170 @@
 
     var capturing =
       false;
+
+
+    var enrollmentIndex =
+      0;
+
+
+    var enrollmentEmbeddings =
+      [];
+
+
+    var enrollmentQualities =
+      [];
+
+
+    var enrollmentLabels =
+      [];
+
+
+    /**
+     * ========================================================
+     * INSTRUCCIONES DE REGISTRO
+     * ========================================================
+     */
+
+    var enrollmentInstructions = [
+
+      {
+        label:
+          'frontal_a',
+
+        text:
+          'Mira directamente al frente.'
+      },
+
+      {
+        label:
+          'izquierda_a',
+
+        text:
+          'Gira ligeramente la cabeza hacia tu izquierda.'
+      },
+
+      {
+        label:
+          'derecha_a',
+
+        text:
+          'Gira ligeramente la cabeza hacia tu derecha.'
+      },
+
+      {
+        label:
+          'frontal_b',
+
+        text:
+          'Mira nuevamente al frente. Si usas gafas, cambia ahora a con/sin gafas.'
+      },
+
+      {
+        label:
+          'izquierda_b',
+
+        text:
+          'Gira ligeramente hacia tu izquierda con esta segunda apariencia.'
+      },
+
+      {
+        label:
+          'derecha_b',
+
+        text:
+          'Última muestra: gira ligeramente hacia tu derecha.'
+      }
+
+    ];
+
+
+    function getEnrollmentInstruction(
+      index
+    ) {
+
+      if (
+        enrollmentInstructions[
+          index
+        ]
+      ) {
+
+        return enrollmentInstructions[
+          index
+        ];
+
+      }
+
+
+      return {
+
+        label:
+          'muestra_' +
+          (
+            index + 1
+          ),
+
+        text:
+          'Cambia ligeramente tu posición y mira nuevamente a la cámara.'
+
+      };
+    }
+
+
+    /**
+     * ========================================================
+     * CONFIGURAR UI
+     * ========================================================
+     */
+
+    if (
+      mode ===
+      'recognize'
+    ) {
+
+      document.title =
+        'Reconocer persona';
+
+
+      pageTitle.textContent =
+        'Reconocer persona';
+
+
+      pageDescription.textContent =
+        'Mantén el rostro visible. El sistema tomará varias muestras automáticamente.';
+
+
+      captureButton.textContent =
+        'Verificar identidad';
+
+
+      glassesTip.classList.add(
+        'hidden'
+      );
+
+    } else {
+
+      document.title =
+        'Registrar perfil facial';
+
+
+      pageTitle.textContent =
+        'Registrar perfil facial';
+
+
+      pageDescription.textContent =
+        'Crearemos un perfil con varias muestras para mejorar la precisión.';
+
+
+      captureButton.textContent =
+        'Capturar muestra 1/' +
+        samplesRequired;
+
+
+      glassesTip.classList.remove(
+        'hidden'
+      );
+
+    }
 
 
     /**
@@ -574,7 +736,7 @@
             2,
 
           minConfidence:
-            0.70
+            minConfidence
 
         },
 
@@ -705,9 +867,26 @@
         await human.warmup();
 
 
-        setStatus(
-          'Mira directamente a la cámara.'
-        );
+        if (
+          mode ===
+          'register'
+        ) {
+
+          updateEnrollmentInstruction();
+
+        } else {
+
+          setStatus(
+            'Mira directamente a la cámara.'
+          );
+
+
+          updateProgress(
+            0,
+            samplesRequired
+          );
+
+        }
 
 
         detectionLoop();
@@ -721,14 +900,11 @@
 
 
         setStatus(
-
           error &&
           error.message
             ? error.message
             : 'No fue posible iniciar la cámara.',
-
           true
-
         );
 
       }
@@ -770,17 +946,13 @@
                 'user',
 
               width: {
-
                 ideal:
                   720
-
               },
 
               height: {
-
                 ideal:
                   960
-
               }
 
             }
@@ -819,13 +991,12 @@
 
 
       await video.play();
-
     }
 
 
     /**
      * ========================================================
-     * DETECCIÓN
+     * LOOP DETECCIÓN
      * ========================================================
      */
 
@@ -836,7 +1007,24 @@
       ) {
 
         return;
+      }
 
+
+      /*
+       * Mientras capturamos varias muestras
+       * no ejecutar detección paralela.
+       */
+      if (
+        capturing
+      ) {
+
+        setTimeout(
+          detectionLoop,
+          200
+        );
+
+
+        return;
       }
 
 
@@ -848,12 +1036,11 @@
 
         setTimeout(
           detectionLoop,
-          250
+          200
         );
 
 
         return;
-
       }
 
 
@@ -869,7 +1056,7 @@
           );
 
 
-        evaluateResult(
+        evaluatePreview(
           result
         );
 
@@ -904,18 +1091,9 @@
     }
 
 
-    function evaluateResult(
+    function evaluatePreview(
       result
     ) {
-
-      if (
-        capturing
-      ) {
-
-        return;
-
-      }
-
 
       captureButton.disabled =
         true;
@@ -928,6 +1106,72 @@
         );
 
 
+      var validation =
+        validateDetection(
+          result
+        );
+
+
+      if (
+        !validation.ok
+      ) {
+
+        setStatus(
+          validation.message
+        );
+
+
+        return;
+      }
+
+
+      cameraContainer
+        .classList
+        .add(
+          'ready'
+        );
+
+
+      captureButton.disabled =
+        false;
+
+
+      if (
+        mode ===
+        'register'
+      ) {
+
+        var instruction =
+          getEnrollmentInstruction(
+            enrollmentIndex
+          );
+
+
+        setStatus(
+          instruction.text
+        );
+
+      } else {
+
+        setStatus(
+          '✓ Rostro preparado. Pulsa Verificar identidad.'
+        );
+
+      }
+
+    }
+
+
+    /**
+     * ========================================================
+     * VALIDAR DETECCIÓN
+     * ========================================================
+     */
+
+    function validateDetection(
+      result
+    ) {
+
       if (
         !result ||
         !Array.isArray(
@@ -935,12 +1179,11 @@
         )
       ) {
 
-        setStatus(
-          'No se pudo analizar la imagen.'
-        );
-
-
-        return;
+        return {
+          ok: false,
+          message:
+            'No se pudo analizar la imagen.'
+        };
 
       }
 
@@ -950,12 +1193,11 @@
         0
       ) {
 
-        setStatus(
-          'No se detecta ningún rostro.'
-        );
-
-
-        return;
+        return {
+          ok: false,
+          message:
+            'No se detecta ningún rostro.'
+        };
 
       }
 
@@ -965,12 +1207,11 @@
         1
       ) {
 
-        setStatus(
-          'Debe aparecer solamente una persona frente a la cámara.'
-        );
-
-
-        return;
+        return {
+          ok: false,
+          message:
+            'Debe aparecer solamente una persona frente a la cámara.'
+        };
 
       }
 
@@ -989,15 +1230,14 @@
 
       if (
         confidence <
-        0.70
+        minConfidence
       ) {
 
-        setStatus(
-          'Acércate un poco y mejora la iluminación.'
-        );
-
-
-        return;
+        return {
+          ok: false,
+          message:
+            'Mejora la iluminación o acércate ligeramente a la cámara.'
+        };
 
       }
 
@@ -1007,68 +1247,70 @@
         !face.embedding.length
       ) {
 
-        setStatus(
-          'Preparando perfil facial...'
-        );
-
-
-        return;
-
-      }
-
-
-      cameraContainer
-        .classList
-        .add(
-          'ready'
-        );
-
-
-      captureButton.disabled =
-        false;
-
-
-      if (
-        mode ===
-        'recognize'
-      ) {
-
-        setStatus(
-          '✓ Rostro detectado. Puedes verificar tu identidad.'
-        );
-
-      } else {
-
-        setStatus(
-          '✓ Rostro detectado. Puedes registrarlo.'
-        );
+        return {
+          ok: false,
+          message:
+            'Preparando perfil facial...'
+        };
 
       }
 
+
+      return {
+
+        ok: true,
+
+        face:
+          face,
+
+        confidence:
+          confidence
+
+      };
     }
 
 
     /**
      * ========================================================
-     * CAPTURA
+     * BOTÓN PRINCIPAL
      * ========================================================
      */
 
     captureButton
       .addEventListener(
         'click',
-        captureFace
+        function() {
+
+          if (
+            mode ===
+            'register'
+          ) {
+
+            captureEnrollmentSample();
+
+          } else {
+
+            captureRecognitionBatch();
+
+          }
+
+        }
       );
 
 
-    async function captureFace() {
+    /**
+     * ========================================================
+     * REGISTRO MULTI-MUESTRA
+     * ========================================================
+     */
+
+    async function captureEnrollmentSample() {
 
       if (
         capturing
       ) {
 
         return;
-
       }
 
 
@@ -1082,144 +1324,80 @@
 
       try {
 
-        if (
-          mode ===
-          'recognize'
-        ) {
-
-          setStatus(
-            'Verificando identidad...'
-          );
-
-        } else {
-
-          setStatus(
-            'Verificando rostro...'
-          );
-
-        }
+        setStatus(
+          'Capturando muestra...'
+        );
 
 
-        var result =
-          await human.detect(
-            video
+        var captured =
+          await captureValidFace(
+            4
           );
 
 
-        if (
-          !result ||
-          !Array.isArray(
-            result.face
-          ) ||
-          result.face.length !==
-            1
-        ) {
-
-          throw new Error(
-            'Debe haber exactamente un rostro frente a la cámara.'
-          );
-
-        }
-
-
-        var face =
-          result.face[0];
-
-
-        if (
-          !face.embedding ||
-          !face.embedding.length
-        ) {
-
-          throw new Error(
-            'No fue posible generar el perfil facial.'
-          );
-
-        }
-
-
-        var embedding =
+        enrollmentEmbeddings.push(
           Array.from(
-            face.embedding
+            captured.face.embedding
+          )
+        );
+
+
+        enrollmentQualities.push(
+          captured.confidence
+        );
+
+
+        var instruction =
+          getEnrollmentInstruction(
+            enrollmentIndex
           );
 
 
-        if (
-          !window.opener
-        ) {
-
-          throw new Error(
-            'No fue posible comunicarse con la aplicación principal.'
-          );
-
-        }
+        enrollmentLabels.push(
+          instruction.label
+        );
 
 
-        var action =
-          mode ===
-            'recognize'
-            ? 'FACE_RECOGNITION'
-            : 'FACE_ENROLLMENT';
+        enrollmentIndex++;
 
 
-        window.opener.postMessage(
-
-          {
-
-            source:
-              'face-camera-app',
-
-            action:
-              action,
-
-            token:
-              token,
-
-            embedding:
-              embedding,
-
-            model:
-              'faceres',
-
-            version:
-              human.version
-
-          },
-
-          '*'
-
+        updateProgress(
+          enrollmentIndex,
+          samplesRequired
         );
 
 
         if (
-          mode ===
-          'recognize'
+          enrollmentIndex >=
+          samplesRequired
         ) {
 
           setStatus(
-            'Rostro enviado para validación.'
+            'Perfil completo. Enviando muestras para validación...'
           );
 
-        } else {
 
-          setStatus(
-            'Rostro capturado correctamente.'
-          );
+          sendEnrollmentBatch();
 
+
+          return;
         }
 
 
-        stopCamera();
-
-
-        setTimeout(
-          function() {
-
-            window.close();
-
-          },
-          700
+        /*
+         * Pequeño espacio temporal para evitar
+         * capturar exactamente el mismo instante.
+         */
+        await sleep(
+          650
         );
+
+
+        capturing =
+          false;
+
+
+        updateEnrollmentInstruction();
 
 
       } catch (error) {
@@ -1238,18 +1416,370 @@
 
 
         setStatus(
-
           error &&
           error.message
             ? error.message
-            : 'No fue posible procesar el rostro.',
-
+            : 'No fue posible capturar la muestra.',
           true
-
         );
 
       }
 
+    }
+
+
+    function updateEnrollmentInstruction() {
+
+      var instruction =
+        getEnrollmentInstruction(
+          enrollmentIndex
+        );
+
+
+      captureButton.textContent =
+        'Capturar muestra ' +
+        (
+          enrollmentIndex + 1
+        ) +
+        '/' +
+        samplesRequired;
+
+
+      setStatus(
+        instruction.text
+      );
+
+
+      updateProgress(
+        enrollmentIndex,
+        samplesRequired
+      );
+    }
+
+
+    function sendEnrollmentBatch() {
+
+      if (
+        !window.opener
+      ) {
+
+        throw new Error(
+          'No fue posible comunicarse con la aplicación principal.'
+        );
+
+      }
+
+
+      window.opener.postMessage(
+
+        {
+
+          source:
+            'face-camera-app',
+
+          action:
+            'FACE_ENROLLMENT_BATCH',
+
+          token:
+            token,
+
+          embeddings:
+            enrollmentEmbeddings,
+
+          qualities:
+            enrollmentQualities,
+
+          labels:
+            enrollmentLabels,
+
+          model:
+            'faceres',
+
+          version:
+            human.version
+
+        },
+
+        '*'
+
+      );
+
+
+      stopCamera();
+
+
+      setTimeout(
+        function() {
+
+          window.close();
+
+        },
+        900
+      );
+    }
+
+
+    /**
+     * ========================================================
+     * RECONOCIMIENTO MULTI-FRAME
+     * ========================================================
+     */
+
+    async function captureRecognitionBatch() {
+
+      if (
+        capturing
+      ) {
+
+        return;
+      }
+
+
+      capturing =
+        true;
+
+
+      captureButton.disabled =
+        true;
+
+
+      var embeddings =
+        [];
+
+
+      try {
+
+        for (
+          var i = 0;
+          i < samplesRequired;
+          i++
+        ) {
+
+          setStatus(
+            'Analizando muestra ' +
+            (
+              i + 1
+            ) +
+            ' de ' +
+            samplesRequired +
+            '...'
+          );
+
+
+          var captured =
+            await captureValidFace(
+              5
+            );
+
+
+          embeddings.push(
+            Array.from(
+              captured.face.embedding
+            )
+          );
+
+
+          updateProgress(
+            i + 1,
+            samplesRequired
+          );
+
+
+          if (
+            i <
+            samplesRequired - 1
+          ) {
+
+            await sleep(
+              350
+            );
+
+          }
+
+        }
+
+
+        setStatus(
+          'Muestras obtenidas. Comparando identidad...'
+        );
+
+
+        if (
+          !window.opener
+        ) {
+
+          throw new Error(
+            'No fue posible comunicarse con la aplicación principal.'
+          );
+
+        }
+
+
+        window.opener.postMessage(
+
+          {
+
+            source:
+              'face-camera-app',
+
+            action:
+              'FACE_RECOGNITION_BATCH',
+
+            token:
+              token,
+
+            embeddings:
+              embeddings,
+
+            model:
+              'faceres',
+
+            version:
+              human.version
+
+          },
+
+          '*'
+
+        );
+
+
+        stopCamera();
+
+
+        setTimeout(
+          function() {
+
+            window.close();
+
+          },
+          900
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+
+        capturing =
+          false;
+
+
+        captureButton.disabled =
+          false;
+
+
+        updateProgress(
+          0,
+          samplesRequired
+        );
+
+
+        setStatus(
+          error &&
+          error.message
+            ? error.message
+            : 'No fue posible obtener muestras consistentes.',
+          true
+        );
+
+      }
+
+    }
+
+
+    /**
+     * ========================================================
+     * CAPTURAR UNA MUESTRA VÁLIDA
+     * ========================================================
+     */
+
+    async function captureValidFace(
+      maxAttempts
+    ) {
+
+      var lastMessage =
+        'No fue posible obtener una muestra facial válida.';
+
+
+      for (
+        var attempt = 0;
+        attempt < maxAttempts;
+        attempt++
+      ) {
+
+        var result =
+          await human.detect(
+            video
+          );
+
+
+        var validation =
+          validateDetection(
+            result
+          );
+
+
+        if (
+          validation.ok
+        ) {
+
+          return validation;
+
+        }
+
+
+        lastMessage =
+          validation.message;
+
+
+        await sleep(
+          250
+        );
+
+      }
+
+
+      throw new Error(
+        lastMessage
+      );
+    }
+
+
+    /**
+     * ========================================================
+     * PROGRESO
+     * ========================================================
+     */
+
+    function updateProgress(
+      current,
+      total
+    ) {
+
+      var percent =
+        total > 0
+          ? (
+              current /
+              total
+            ) *
+            100
+          : 0;
+
+
+      progressBar.style.width =
+        percent +
+        '%';
+
+
+      progressText.textContent =
+        current +
+        ' de ' +
+        total +
+        ' muestras';
     }
 
 
@@ -1297,7 +1827,6 @@
 
       video.srcObject =
         null;
-
     }
 
 
@@ -1309,9 +1838,26 @@
 
     /**
      * ========================================================
-     * UI
+     * AUXILIARES
      * ========================================================
      */
+
+    function sleep(
+      milliseconds
+    ) {
+
+      return new Promise(
+        function(resolve) {
+
+          setTimeout(
+            resolve,
+            milliseconds
+          );
+
+        }
+      );
+    }
+
 
     function setStatus(
       message,
@@ -1330,7 +1876,6 @@
             error
           )
         );
-
     }
 
 
