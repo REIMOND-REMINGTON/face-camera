@@ -739,29 +739,35 @@
           'Rostro capturado correctamente.'
         );
 
+        const action =
+          mode === 'recognize'
+            ? 'FACE_RECOGNITION'
+            : 'FACE_ENROLLMENT';
+        
+        
         window.opener.postMessage(
           {
-
+        
             source:
               'face-camera-app',
-
+        
             action:
-              'FACE_ENROLLMENT',
-
+              action,
+        
             token:
               token,
-
+        
             embedding:
               embedding,
-
+        
             model:
               'faceres',
-
+        
             version:
               human.version
-
+        
           },
-
+        
           '*'
         );
 
